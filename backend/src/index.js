@@ -7,7 +7,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import connectDb from "#src/config/dbConfig.js";
 import route from "#src/routes/userRoutes.js";
-
+import { ApiError } from "#src/utils/AppError.js";
 // Load environment variables from `.env` into process.env
 dotenv.config();
 
@@ -28,7 +28,7 @@ app.use(helmet());
 app.use(compression());
 
 // Log HTTP requests to the console in 'dev' format (method, url, status, time)
-app.use(morgan("dev"));  //Developer personal choice to keep it
+app.use(morgan("dev")); //Developer personal choice to keep it
 
 // Parse cookies into req.cookies (useful for sessions, auth, etc.)
 app.use(cookieParser());
@@ -41,8 +41,18 @@ app.use("/api", route);
 
 // Basic error handler
 app.use((err, req, res, next) => {
-    console.error("Error:", err.stack);
-    res.status(500).json({ message: "Internal Server Error" });
+    if (err instanceof ApiError) {
+        return res.status(err.statusCode).json({
+            success: false,
+            message: err.message,
+            data: err.data,
+        });
+    }
+    console.error("Unexpected Error:", err);
+    res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+    });
 });
 
 const PORT = process.env.PORT || 5000;
