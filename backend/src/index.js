@@ -1,5 +1,5 @@
-import express from "express";
 import dotenv from "dotenv";
+import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
@@ -8,8 +8,11 @@ import cookieParser from "cookie-parser";
 import connectDb from "#src/config/dbConfig.js";
 import route from "#src/routes/userRoutes.js";
 import { ApiError } from "#src/utils/AppError.js";
+import { initializeCloudinary } from "./config/cloudinary.js";
+
 // Load environment variables from `.env` into process.env
 dotenv.config();
+
 
 const app = express();
 
@@ -35,6 +38,10 @@ app.use(cookieParser());
 
 // function to handle the Db connections
 connectDb();
+
+// Initialize Cloudinary configuration
+initializeCloudinary();
+
 
 // Routes that are mounted with baseurl /api/*
 app.use("/api", route);
