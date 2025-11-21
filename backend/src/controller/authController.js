@@ -1,6 +1,6 @@
 import User from "../models/users.js";
 import { ApiError } from "#src/utils/AppError.js";
-import z, { success } from "zod";
+import z from "zod";
 import { checkLoginIncomingData, checkRegisterUserSchema } from "#src/utils/zod.js";
 import { asyncHandler } from "#src/utils/AsyncHandler.js";
 import { generateAccessToken, generateRefreshToken, cookieOption, verifyRefreshToken } from "#src/utils/jwt.js";
@@ -25,7 +25,6 @@ export const registerUser = asyncHandler(async (req, res) => {
         }
     }
     const hashedPassword = await hashPassword(password);
-    const refreshToken = generateRefreshToken({ _id: new mongoose.Types.ObjectId() });
 
     const newUser = new User({
         name,
@@ -34,17 +33,17 @@ export const registerUser = asyncHandler(async (req, res) => {
         password: hashedPassword,
         role,
         location,
-        refreshToken,
     });
     await newUser.save();
-    const accessToken = generateAccessToken({ _id: newUser._id });
-    const newRefreshToken = generateRefreshToken({ _id: newUser._id });
 
-    await newUser.updateOne({ refreshToken: newRefreshToken });
+    const accessToken = generateAccessToken({ _id: newUser._id });
+    const refreshToken = generateRefreshToken({ _id: newUser._id });
+
+    await newUser.updateOne({ refreshToken: refreshToken });
 
     return res
         .status(201)
-        .cookie("refreshToken", newRefreshToken, {  ...cookieOption, maxAge: 7 * 24 * 60 * 60 * 1000 })
+        .cookie("refreshToken", refreshToken, { ...cookieOption, maxAge: 7 * 24 * 60 * 60 * 1000 })
         .cookie("accessToken", accessToken, { ...cookieOption, maxAge: 15 * 60 * 1000 })
         .json({ success: true, message: "User registered successfully" });
 });
@@ -121,5 +120,3 @@ export const logout = asyncHandler(async (req, res) => {
         message: "Logged out successfully",
     });
 });
-
-
